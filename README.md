@@ -1,6 +1,6 @@
 ## AutoCopy
 
-AutoCopy 一个可以缩短开发时间的工具类，帮助程序员从某些繁重的人肉编码中解脱出来。灵感来自于**[AutoMapper](https://github.com/AutoMapper/AutoMapper "AutoMapper")**，初次使用AutoMapper时被它实现的功能深深吸引，但是在逐渐学习中发现AutoMapper速度不能令人满意，并且实现有些复杂，小白不容易看懂原理，所以萌生了自己写一个更简单、更高效类库的想法。在这样一个契机之下，AutoCopy应运而生（:clap:~:smirk:~）。AutoCopy的一些方法模仿了AutoMapper的命名和使用方式，降低使用上的难度。
+AutoCopy 一个可以缩短开发时间的工具类，帮助程序员从某些繁重的人肉编码中解脱出来。灵感来自于**[AutoMapper](https://github.com/AutoMapper/AutoMapper "AutoMapper")**，初次使用AutoMapper时被它实现的功能深深吸引，但是在逐渐学习中发现AutoMapper速度不能令人满意，并且实现有些复杂，小白不容易看懂原理，所以萌生了自己写一个更简单、更高效类库的想法。在这样一个契机之下，AutoCopy应运而生（:clap::smirk:）。AutoCopy的一些方法模仿了AutoMapper的命名和使用方式，降低使用上的难度。
 
 ## 依赖
 
