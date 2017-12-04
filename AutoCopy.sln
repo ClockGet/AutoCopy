@@ -39,6 +39,8 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Web.Test", "Web.Test\", "{5
 		DefaultWebSiteLanguage = "Visual C#"
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataRowTest", "DataRowTest\DataRowTest.csproj", "{FB83AFCB-3523-47D7-B849-A9032294EC46}"
+EndProject
 Global
 	GlobalSection(SubversionScc) = preSolution
 		Svn-Managed = True
@@ -61,6 +63,10 @@ Global
 		{501CD4B3-6BF8-48E8-86EB-D0517BEA2E3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{501CD4B3-6BF8-48E8-86EB-D0517BEA2E3C}.Release|Any CPU.ActiveCfg = Debug|Any CPU
 		{501CD4B3-6BF8-48E8-86EB-D0517BEA2E3C}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{FB83AFCB-3523-47D7-B849-A9032294EC46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB83AFCB-3523-47D7-B849-A9032294EC46}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB83AFCB-3523-47D7-B849-A9032294EC46}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB83AFCB-3523-47D7-B849-A9032294EC46}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
