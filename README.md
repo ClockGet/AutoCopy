@@ -160,14 +160,16 @@ Type conversions are registered by calling the **ForTypeConvert<T1, T2>** method
 ## Explanation of Parameter in [TryGetExpression](/AutoCopyLib/TargetExpressionProviderBase.cs) method
 
 With AutoCopy<T1, T2>, assume T1 is the target type and T2 is the source type
-|Parameter Name	|Description					|
-|name			|source property name			|
-|parameter		|Expression of source property	|
-|destType		|target tyoe					|
-|exp			|the final Expression			|
-|variable		|variables						|
-|test			|test Expression				|
-|ifTrue			|Whether need to test or not; If the value is true, then only the test Expression executed return true can exp Expression will be called.			|
+
+| | Parameter Name | Description
+---|---|---
+1 | name | source property name
+2 | parameter | Expression of source property
+3 | destType | target tyoe
+4 | exp | the final Expression
+5 | variable | variables
+6 | test | test Expression
+7 | ifTrue | Whether need to test or not; If the value is true, then only the test Expression executed return true can exp Expression will be called
 
 ## ChangeLog
 2017-12-05 Add a demo which show the DataRow class convert to entity class 
