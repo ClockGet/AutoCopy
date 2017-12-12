@@ -4,7 +4,7 @@ AutoCopy 一个可以缩短开发时间的工具类，帮助程序员从某些�
 
 ## 依赖
 
-* **Mono.Reflection.dll**
+* **[Mono.Reflection.dll](https://github.com/jbevain/mono.reflection "Mono.Reflection")**
 * **[DelegateDecompiler.dll](https://github.com/hazzik/DelegateDecompiler "DelegateDecompiler")**
 
 ## 特性
@@ -143,6 +143,19 @@ AutoCopy 一个可以缩短开发时间的工具类，帮助程序员从某些�
     Data data=autoCopy.Map(collection);
 
 ```
+## 类型转换
+### 自动转换
+内部类[TypeConverter](/AutoCopyLib/TypeConverter.cs)的TryConvert方法通过以下顺序进行类型的自动转换：
+
+1. 是否可以显式转换
+2. 是否可以隐式转换
+3. 是否存在继承关系
+4. 是否存在Convert.ToXXX方法
+5. 是否可以调用目标类型上的TryParse方法
+6. 调用[Convert.ChangeType](https://msdn.microsoft.com/en-us/library/system.convert.changetype(v=vs.110).aspx "Convert.ChangeType")方法
+### 手动转换
+
+通过调用**AutoCopy<T, D>**类实例的**ForTypeConvert<T1, T2>**方法来注册类型转换。
 
 ## 抽象类[TargetExpressionProviderBase](/AutoCopyLib/TargetExpressionProviderBase.cs)的TryGetExpression方法参数说明
 
