@@ -1,26 +1,30 @@
 ## AutoCopy
 
-AutoCopy is a tool that reduces development time and helps programmers get out of some heavy human coding, which is inspired by **[AutoMapper](https://github.com/AutoMapper/AutoMapper "AutoMapper")**.
+AutoCopy 一个可以缩短开发时间的工具类，帮助程序员从某些繁重的人肉编码中解脱出来。灵感来自于**[AutoMapper](https://github.com/AutoMapper/AutoMapper "AutoMapper")**，初次使用AutoMapper时被它实现的功能深深吸引，但是在逐渐学习中发现AutoMapper速度不能令人满意，并且实现有些复杂，小白不容易看懂原理，所以萌生了自己写一个更简单、更高效类库的想法。在这样一个契机之下，AutoCopy应运而生（:clap::smirk:）。AutoCopy的一些方法模仿了AutoMapper的命名和使用方式，降低使用上的难度。
 
-## Document
+## 文档
 
-[Chinese](README_CN.md)
+(英文版)(README.md)
 
-## Dependencies
+## 依赖
 
 * **[Mono.Reflection.dll](https://github.com/jbevain/mono.reflection "Mono.Reflection")**
 * **[DelegateDecompiler.dll](https://github.com/hazzik/DelegateDecompiler "DelegateDecompiler")**
 
-## Attribute
+## 特性
 
-1. Fast execution
-2. Based on the abstract class **TargetExpressionProviderBase** can be any extension
-3. Support automatic / manual type conversion
-4. Support for multiple instances of AutoCopy nesting
+1. 执行速度快
+2. 基于抽象类**TargetExpressionProviderBase**可以实现任意扩展
+3. 支持自动/手工的类型转换
+4. 支持多AutoCopy实例嵌套
 
-## Example
+## 原理说明
 
-### 1 Same type of object copyed
+在调用**Register**方法时基于[Reflection](https://msdn.microsoft.com/en-us/library/system.reflection(v=vs.110).aspx "Reflection")分析源类和目标类的所有属性，并生成[Expression](https://msdn.microsoft.com/en-us/library/system.linq.expressions.expression(v=vs.110).aspx "Expression")列表，之后使用[Expression.Lambda](https://msdn.microsoft.com/en-us/library/system.linq.expressions.expression.lambda(v=vs.110).aspx "Expression.Lambda")方法把Expression列表以及相应参数包装成[LambdaExpression](https://msdn.microsoft.com/en-us/library/system.linq.expressions.lambdaexpression(v=vs.110).aspx "LambdaExpression")，通过调用Compile方法编译为[Func Delegate](https://msdn.microsoft.com/en-us/library/bb549151(v=vs.110).aspx "Func Delegate")。
+
+## 示例
+
+### 示例1 相同类型对象拷贝
 
 ```csharp
 
@@ -39,7 +43,7 @@ AutoCopy is a tool that reduces development time and helps programmers get out o
 
 ```
 
-### 2 Different type of object copyed
+### 示例2 不同类型对象拷贝
 
 ```csharp
 
@@ -87,7 +91,7 @@ AutoCopy is a tool that reduces development time and helps programmers get out o
 
 ```
 
-### 3 Multiple AutoCopy instances nested
+### 示例3 多AutoCopy示例嵌套
 
 ```csharp
 
@@ -143,35 +147,35 @@ AutoCopy is a tool that reduces development time and helps programmers get out o
     Data data=autoCopy.Map(collection);
 
 ```
-## Type Convert
-### Automatic conversion
-The TryConvert method of the internal class [TypeConverter](/AutoCopyLib/TypeConverter.cs) performs automatic conversion of the type in the following order：
+## 类型转换
+### 自动转换
+内部类[TypeConverter](/AutoCopyLib/TypeConverter.cs)的TryConvert方法通过以下顺序进行类型的自动转换：
 
-1. Whether it can be converted explicitly
-2. Whether it can be converted implicitly
-3. Whether it is a subclass
-4. Whether there is the Convert.ToXXX method
-5. Whether there is the TryParse method on the target type
-6. Call [Convert.ChangeType](https://msdn.microsoft.com/en-us/library/system.convert.changetype(v=vs.110).aspx "Convert.ChangeType") method
-### Manual conversion
+1. 是否可以显式转换
+2. 是否可以隐式转换
+3. 是否存在继承关系
+4. 是否存在Convert.ToXXX方法
+5. 是否可以调用目标类型上的TryParse方法
+6. 调用[Convert.ChangeType](https://msdn.microsoft.com/en-us/library/system.convert.changetype(v=vs.110).aspx "Convert.ChangeType")方法
+### 手动转换
 
-Type conversions are registered by calling the **ForTypeConvert<T1, T2>** method of the **AutoCopy<T, D>** instance.
+通过调用**AutoCopy<T, D>**类实例的**ForTypeConvert<T1, T2>**方法来注册类型转换。
 
-## Explanation of Parameter in [TryGetExpression](/AutoCopyLib/TargetExpressionProviderBase.cs) method
+## 抽象类[TargetExpressionProviderBase](/AutoCopyLib/TargetExpressionProviderBase.cs)的TryGetExpression方法参数说明
 
-With AutoCopy<T1, T2>, assume T1 is the target type and T2 is the source type
+假定AutoCopy<T1, T2>中T1为目标类型，T2为源类型
 
-1. name			source property name
-2. parameter	Expression of source property
-3. destType		target tyoe
-4. exp			the final Expression
-5. variable		variables
-6. test			test Expression
-7. ifTrue		Whether need to test or not; If the value is true, then only the test Expression executed return true can exp Expression will be called.
+1. name			源属性名称
+2. parameter	源属性的参数表达式
+3. destType		目标类型
+4. exp			通过TryGetExpression方法最后生成的表达式
+5. variable		临时变量
+6. test			测试表达式
+7. ifTrue		是否需要测试；如果该值为true，则只有test执行返回true时才会继续执行exp
 
-## ChangeLog
-2017-12-05 Add a demo which show the DataRow class convert to entity class 
+## 修改日志
+2017-12-05 增加DataRow映射到实体类的示例程序
 
-## Warning
+## 注意事项
 
-Since AutoCopy uses reflection at runtime to analysis the properties of classes by calling **Register** methods automatically, bugs may occur if the source code is obfuscated.
+由于AutoCopy在运行时通过主动调用**Register**方法使用反射分析类的属性，所以如果方法进行了混淆可能会出现Bug。
