@@ -4,7 +4,7 @@ AutoCopy 一个可以缩短开发时间的工具类，帮助程序员从某些�
 
 ## 文档
 
-(英文版)(README.md)
+[英文版](README.md)
 
 ## 依赖
 
@@ -165,13 +165,15 @@ AutoCopy 一个可以缩短开发时间的工具类，帮助程序员从某些�
 
 假定AutoCopy<T1, T2>中T1为目标类型，T2为源类型
 
-1. name			源属性名称
-2. parameter	源属性的参数表达式
-3. destType		目标类型
-4. exp			通过TryGetExpression方法最后生成的表达式
-5. variable		临时变量
-6. test			测试表达式
-7. ifTrue		是否需要测试；如果该值为true，则只有test执行返回true时才会继续执行exp
+| | 属性名 | 备注
+---|---|---
+1 | name | 源属性名称
+2 | parameter | 源属性的参数表达式
+3 | destType | 目标类型
+4 | exp | 通过TryGetExpression方法最后生成的表达式
+5 | variable | 临时变量
+6 | test | 测试表达式
+7 | ifTrue | 是否需要测试；如果该值为true，则只有test执行返回true时才会继续执行exp
 
 ## 修改日志
 2017-12-05 增加DataRow映射到实体类的示例程序
