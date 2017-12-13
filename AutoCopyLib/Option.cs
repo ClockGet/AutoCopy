@@ -67,7 +67,7 @@ namespace AutoCopyLib
                 var body2 = Visit(body);
                 return body2;
             }
-            public Func<TDest,TValue> ResolveUsing<TValue>(Func<TDest,TValue> resolver)
+            public Func<P,TValue> ResolveUsing<TValue>(Func<P,TValue> resolver)
             {
                 return resolver;
             }
