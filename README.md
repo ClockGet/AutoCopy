@@ -18,6 +18,31 @@ AutoCopy is a tool that reduces development time and helps programmers get out o
 3. Support automatic / manual type conversion
 4. Support for multiple instances of AutoCopy nesting
 
+## Benchmark
+
+iterations:100,000
+| Action | mean time(ms)
+---|---
+hand map | 4.267375
+AutoCopy | 4.18163333333333
+AutoMapper | 42.4985
+
+iterations:1,000,000
+| Action | mean time(ms)
+---|---
+hand map | 30.884225
+AutoCopy | 38.647675
+AutoMapper | 322.8877
+
+iterations:10,000,000
+| Action | mean time(ms)
+---|---
+hand map | 440.14825
+AutoCopy | 459.17575
+AutoMapper | 3895.974725
+
+Benchmark code see [here](/Console.Test/Program.cs)
+
 ## Example
 
 ### 1 Same type of object copyed
@@ -67,7 +92,7 @@ AutoCopy is a tool that reduces development time and helps programmers get out o
         public string Memo { get; set; }
     }
 
-    var autoCopy = AutoCopy.CreateMap<CustomerInfo, Customer>();
+    var autoCopy = AutoCopy.CreateMap<Customer, CustomerInfo>();
 
     autoCopy
         .ForMember(p => p.zipCode, opt => opt.MapFrom(p => p.Address.ZipCode))
@@ -128,11 +153,11 @@ AutoCopy is a tool that reduces development time and helps programmers get out o
 
     HttpQueryCollection collection = new HttpQueryCollection(surl, false);
 
-    var ac = AutoCopy.CreateMap<Ext, NameValueCollection>();
+    var ac = AutoCopy.CreateMap<NameValueCollection, Ext>();
 
     ac.Provider= new HttpRequestParamsExpressionProvider(typeof(NameValueCollection));
 
-    var autoCopy = AutoCopy.CreateMap<Data, NameValueCollection>();
+    var autoCopy = AutoCopy.CreateMap<NameValueCollection, Data>();
 
     autoCopy.ForMember(p => p.ext, opt => opt.MapFrom(p=>ac.Map(p)));
 
@@ -159,21 +184,21 @@ Type conversions are registered by calling the **ForTypeConvert<T1, T2>** method
 
 ## Explanation of Parameter in [TryGetExpression](/AutoCopyLib/TargetExpressionProviderBase.cs) method
 
-With AutoCopy<T1, T2>, assume T1 is the target type and T2 is the source type
+With AutoCopy<T1, T2>, assume T1 is the source type and T2 is the destination type
 
 | | Parameter Name | Description
 ---|---|---
-1 | name | source property name
-2 | parameter | Expression of source property
-3 | destType | target tyoe
+1 | name | destination property name
+2 | parameter | Expression of source parameter Expression
+3 | destType | destination type
 4 | exp | the final Expression
 5 | variable | variables
 6 | test | test Expression
 7 | ifTrue | Whether need to test or not; If the value is true, then only the test Expression executed return true can exp Expression will be called
 
 ## ChangeLog
-2017-12-05 Add a demo which show the DataRow class convert to entity class 
-
+2017-12-05 Add a demo which show the DataRow class convert to entity class  
+2017-12-12 Adjust the order of parameters in AutoCopy<,> and fixed the parameter type bug in Option.ResolveUsing  
 ## Warning
 
 Since AutoCopy uses reflection at runtime to analysis the properties of classes by calling **Register** methods automatically, bugs may occur if the source code is obfuscated.

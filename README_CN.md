@@ -18,6 +18,33 @@ AutoCopy 一个可以缩短开发时间的工具类，帮助程序员从某些�
 3. 支持自动/手工的类型转换
 4. 支持多AutoCopy实例嵌套
 
+## 基准测试
+
+
+执行次数:100,000
+| 操作 | 平均时间(毫秒)
+---|---
+手动映射 | 4.267375
+AutoCopy | 4.18163333333333
+AutoMapper | 42.4985
+
+执行次数:1,000,000
+| 操作 | 平均时间(毫秒)
+---|---
+手动映射 | 30.884225
+AutoCopy | 38.647675
+AutoMapper | 322.8877
+
+执行次数:10,000,000
+| 操作 | 平均时间(毫秒)
+---|---
+手动映射 | 440.14825
+AutoCopy | 459.17575
+AutoMapper | 3895.974725
+
+Benchmark code see [here](/Console.Test/Program.cs)
+
+
 ## 原理说明
 
 在调用**Register**方法时基于[Reflection](https://msdn.microsoft.com/en-us/library/system.reflection(v=vs.110).aspx "Reflection")分析源类和目标类的所有属性，并生成[Expression](https://msdn.microsoft.com/en-us/library/system.linq.expressions.expression(v=vs.110).aspx "Expression")列表，之后使用[Expression.Lambda](https://msdn.microsoft.com/en-us/library/system.linq.expressions.expression.lambda(v=vs.110).aspx "Expression.Lambda")方法把Expression列表以及相应参数包装成[LambdaExpression](https://msdn.microsoft.com/en-us/library/system.linq.expressions.lambdaexpression(v=vs.110).aspx "LambdaExpression")，通过调用Compile方法编译为[Func Delegate](https://msdn.microsoft.com/en-us/library/bb549151(v=vs.110).aspx "Func Delegate")。
@@ -71,7 +98,7 @@ AutoCopy 一个可以缩短开发时间的工具类，帮助程序员从某些�
         public string Memo { get; set; }
     }
 
-    var autoCopy = AutoCopy.CreateMap<CustomerInfo, Customer>();
+    var autoCopy = AutoCopy.CreateMap<Customer, CustomerInfo>();
 
     autoCopy
         .ForMember(p => p.zipCode, opt => opt.MapFrom(p => p.Address.ZipCode))
@@ -132,11 +159,11 @@ AutoCopy 一个可以缩短开发时间的工具类，帮助程序员从某些�
 
     HttpQueryCollection collection = new HttpQueryCollection(surl, false);
 
-    var ac = AutoCopy.CreateMap<Ext, NameValueCollection>();
+    var ac = AutoCopy.CreateMap<NameValueCollection, Ext>();
 
     ac.Provider= new HttpRequestParamsExpressionProvider(typeof(NameValueCollection));
 
-    var autoCopy = AutoCopy.CreateMap<Data, NameValueCollection>();
+    var autoCopy = AutoCopy.CreateMap<NameValueCollection, Data>();
 
     autoCopy.ForMember(p => p.ext, opt => opt.MapFrom(p=>ac.Map(p)));
 
@@ -163,12 +190,12 @@ AutoCopy 一个可以缩短开发时间的工具类，帮助程序员从某些�
 
 ## 抽象类[TargetExpressionProviderBase](/AutoCopyLib/TargetExpressionProviderBase.cs)的TryGetExpression方法参数说明
 
-假定AutoCopy<T1, T2>中T1为目标类型，T2为源类型
+假定AutoCopy<T1, T2>中T1为源类型，T2为目标类型
 
 | | 属性名 | 备注
 ---|---|---
-1 | name | 源属性名称
-2 | parameter | 源属性的参数表达式
+1 | name | 目标属性名称
+2 | parameter | 源类型的参数表达式
 3 | destType | 目标类型
 4 | exp | 通过TryGetExpression方法最后生成的表达式
 5 | variable | 临时变量
@@ -176,7 +203,8 @@ AutoCopy 一个可以缩短开发时间的工具类，帮助程序员从某些�
 7 | ifTrue | 是否需要测试；如果该值为true，则只有test执行返回true时才会继续执行exp
 
 ## 修改日志
-2017-12-05 增加DataRow映射到实体类的示例程序
+2017-12-05 增加DataRow映射到实体类的示例程序  
+2017-12-13 调整了AutoCopy<,>类的参数顺序并且修改了Option.ResolveUsing方法参数类型错误的bug
 
 ## 注意事项
 
