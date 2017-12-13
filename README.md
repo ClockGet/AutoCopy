@@ -21,6 +21,7 @@ AutoCopy is a tool that reduces development time and helps programmers get out o
 ## Benchmark
 
 iterations:100,000
+
 | Action | mean time(ms)
 ---|---
 hand map | 4.267375
@@ -28,6 +29,7 @@ AutoCopy | 4.18163333333333
 AutoMapper | 42.4985
 
 iterations:1,000,000
+
 | Action | mean time(ms)
 ---|---
 hand map | 30.884225
@@ -35,6 +37,7 @@ AutoCopy | 38.647675
 AutoMapper | 322.8877
 
 iterations:10,000,000
+
 | Action | mean time(ms)
 ---|---
 hand map | 440.14825
