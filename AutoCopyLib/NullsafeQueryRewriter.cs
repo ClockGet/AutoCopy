@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace AutoCopyLib
 {
-    public partial class AutoCopy<T, D>
+    public partial class AutoCopy<TSource, TDest>
     {
         #region copied from NeinLinq (MIT License): https://github.com/axelheer/nein-linq/blob/master/src/NeinLinq/NullsafeQueryRewriter.cs
         internal class NullsafeQueryRewriter : ExpressionVisitor

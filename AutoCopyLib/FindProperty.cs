@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace AutoCopyLib
 {
-    public partial class AutoCopy<T, D>
+    public partial class AutoCopy<TSource, TDest>
     {
         #region FindProperty
         internal static MemberInfo FindProperty(LambdaExpression lambdaExpression)

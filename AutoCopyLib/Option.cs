@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace AutoCopyLib
 {
-    public partial class AutoCopy<T, D>
+    public partial class AutoCopy<TSource, TDest>
     {
         public class Option<P> : ExpressionVisitor
         {
@@ -67,7 +67,7 @@ namespace AutoCopyLib
                 var body2 = Visit(body);
                 return body2;
             }
-            public Func<D,TValue> ResolveUsing<TValue>(Func<D,TValue> resolver)
+            public Func<TDest,TValue> ResolveUsing<TValue>(Func<TDest,TValue> resolver)
             {
                 return resolver;
             }

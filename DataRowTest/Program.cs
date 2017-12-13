@@ -12,7 +12,7 @@ namespace DataRowTest
     {
         static void Main(string[] args)
         {
-            var autoCopy=AutoCopyLib.AutoCopy.CreateMap<SimpleModel, DataRowView>();
+            var autoCopy = AutoCopyLib.AutoCopy.CreateMap<DataRowView,SimpleModel>();
             autoCopy.Provider = new DataRowExpressionProvider(typeof(DataRowView));
             autoCopy.Register();
             Console.WriteLine(autoCopy.Lambda.ToReadableString());

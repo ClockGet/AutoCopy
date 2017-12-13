@@ -7,14 +7,14 @@ using AgileObjects.ReadableExpressions;
 /// </summary>
 public class AutoCopyUtils
 {
-    private static AutoCopyLib.AutoCopy<Data, NameValueCollection> autoCopy = null;
+    private static AutoCopyLib.AutoCopy<NameValueCollection,Data> autoCopy = null;
     public static void Initialize()
     {
-        autoCopy = AutoCopyLib.AutoCopy.CreateMap<Data, NameValueCollection>();
+        autoCopy = AutoCopyLib.AutoCopy.CreateMap<NameValueCollection,Data>();
         autoCopy.Provider = new HttpRequestParamsExpressionProvider(typeof(NameValueCollection));
         autoCopy.Register(true);
     }
-    public static AutoCopyLib.AutoCopy<Data,NameValueCollection> Instance
+    public static AutoCopyLib.AutoCopy<NameValueCollection,Data> Instance
     {
         get
         {

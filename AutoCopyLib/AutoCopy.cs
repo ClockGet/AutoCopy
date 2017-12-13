@@ -15,19 +15,19 @@ namespace AutoCopyLib
             return new AutoCopy<TSource, TDest>();
         }
     }
-    public partial class AutoCopy<T, D>
+    public partial class AutoCopy<TSource, TDest>
     {
-        delegate bool RefFunc(ref T src, D des, AutoCopy<T, D> proxy);
+        delegate bool RefFunc(ref TDest dest, TSource src, AutoCopy<TSource, TDest> proxy);
         private Exception exception = null;
         internal AutoCopy()
         {
-            p1 = Expression.Parameter(typeof(T).MakeByRefType(), "src");
-            p2 = Expression.Parameter(typeof(D), "dst");
+            p1 = Expression.Parameter(typeof(TDest).MakeByRefType(), "dest");
+            p2 = Expression.Parameter(typeof(TSource), "src");
             p3 = Expression.Parameter(this.GetType(), "proxy");
-            opt = new Option<D>(p2);
+            opt = new Option<TSource>(p2);
         }
         private RefFunc m_func;
-        private Option<D> opt = null;
+        private Option<TSource> opt = null;
         ParameterExpression p1 = null;
         ParameterExpression p2 = null;
         ParameterExpression p3 = null;
@@ -36,7 +36,7 @@ namespace AutoCopyLib
         private Func<Expression, Expression> nullsafeQueryFunc = null;
         private Dictionary<TypeTuple, MethodInfo> _typeConvertMap = new Dictionary<TypeTuple, MethodInfo>();
 
-        public AutoCopy<T, D> ForMember<TValue>(Expression<Func<T, TValue>> src, Func<Option<D>, Expression> dst)
+        public AutoCopy<TSource, TDest> ForMember<TValue>(Expression<Func<TDest, TValue>> dest, Func<Option<TSource>, Expression> src)
         {
             //Expression body = src;
             //if(body is LambdaExpression)
@@ -48,15 +48,15 @@ namespace AutoCopyLib
             //    throw new InvalidOperationException();
             //}
             //var p = (PropertyInfo)((MemberExpression)body).Member;
-            var p = FindProperty(src) as PropertyInfo;
-            var expression = dst.Invoke(opt);
+            var p = FindProperty(dest) as PropertyInfo;
+            var expression = src.Invoke(opt);
             _map[p] = expression;
             return this;
         }
-        public AutoCopy<T, D> ForMember<TValue>(Expression<Func<T, TValue>> src, Func<Option<D>, Func<D, TValue>> dst)
+        public AutoCopy<TSource, TDest> ForMember<TValue>(Expression<Func<TDest, TValue>> dest, Func<Option<TSource>, Func<TSource, TValue>> src)
         {
-            var p = FindProperty(src) as PropertyInfo;
-            var func = dst(opt);
+            var p = FindProperty(dest) as PropertyInfo;
+            var func = src(opt);
             Expression expression = null;
             try
             {
@@ -71,7 +71,7 @@ namespace AutoCopyLib
             _map[p] = expression;
             return this;
         }
-        public AutoCopy<T, D> ForTypeConvert<T1, T2>(Expression<Func<T2, T1>> converter)
+        public AutoCopy<TSource, TDest> ForTypeConvert<T1, T2>(Expression<Func<T2, T1>> converter)
         {
             Type src = typeof(T1);
             Type dst = typeof(T2);
@@ -102,24 +102,24 @@ namespace AutoCopyLib
             if (this.Lambda == null)
             {
                 nullsafeQueryFunc = (exp) => enableNullSafe ? nullsafeQueryRewriter.visit(exp) : exp;
-                var srcPropertyInfos = typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(p => p.GetCustomAttributes(typeof(CopyIgnoreAttribute), true).Length == 0);
+                var destPropertyInfos = typeof(TDest).GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(p => p.GetCustomAttributes(typeof(CopyIgnoreAttribute), true).Length == 0);
                 //var dstPropertyInfos = typeof(D).GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
                 List<Expression> list = new List<Expression>();
                 List<ParameterExpression> variables = new List<ParameterExpression>();
-                list.Add(Expression.Assign(p1, Expression.Coalesce(p1, Expression.New(typeof(T)))));
-                foreach (var srcPropertyInfo in srcPropertyInfos)
+                list.Add(Expression.Assign(p1, Expression.Coalesce(p1, Expression.New(typeof(TDest)))));
+                foreach (var destPropertyInfo in destPropertyInfos)
                 {
-                    if (!srcPropertyInfo.CanWrite)
+                    if (!destPropertyInfo.CanWrite)
                     {
                         continue;
                     }
                     Expression exp, test = null;
                     ParameterExpression @var;
                     bool ifTrue = false;
-                    if (!_map.TryGetValue(srcPropertyInfo, out exp))
+                    if (!_map.TryGetValue(destPropertyInfo, out exp))
                     {
-                        if (!Provider.TryGetExpression(srcPropertyInfo.Name, p2, srcPropertyInfo.PropertyType, out exp, out @var, out test, out ifTrue))
+                        if (!Provider.TryGetExpression(destPropertyInfo.Name, p2, destPropertyInfo.PropertyType, out exp, out @var, out test, out ifTrue))
                         {
                             continue;
                         }
@@ -128,27 +128,27 @@ namespace AutoCopyLib
                             variables.Add(@var);
                         }
                     }
-                    if (srcPropertyInfo.PropertyType != exp.Type)
+                    if (destPropertyInfo.PropertyType != exp.Type)
                     {
-                        TypeTuple typeTuple = new TypeTuple(srcPropertyInfo.PropertyType, exp.Type);
+                        TypeTuple typeTuple = new TypeTuple(destPropertyInfo.PropertyType, exp.Type);
                         MethodInfo m;
                         if (_typeConvertMap.TryGetValue(typeTuple, out m))
                         {
                             exp = Expression.Call(exp, m);
-                            list.Add(Expression.Assign(Expression.MakeMemberAccess(p1, srcPropertyInfo), nullsafeQueryFunc(exp)));
+                            list.Add(Expression.Assign(Expression.MakeMemberAccess(p1, destPropertyInfo), nullsafeQueryFunc(exp)));
                         }
                         else
                         {
                             Action<List<Expression>, ParameterExpression, PropertyInfo, Func<Expression, Expression>> act;
                             ParameterExpression variable;
                             //ConvertType
-                            if (!TypeConverter.TryConvert(exp, exp.Type, srcPropertyInfo.PropertyType, out act, out variable))
+                            if (!TypeConverter.TryConvert(exp, exp.Type, destPropertyInfo.PropertyType, out act, out variable))
                             {
                                 continue;
                             }
                             if (act == null)
                                 continue;
-                            act(list, p1, srcPropertyInfo, nullsafeQueryFunc);
+                            act(list, p1, destPropertyInfo, nullsafeQueryFunc);
                             if (variable != null)
                             {
                                 variables.Add(variable);
@@ -157,7 +157,7 @@ namespace AutoCopyLib
                     }
                     else
                     {
-                        list.Add(Expression.Assign(Expression.MakeMemberAccess(p1, srcPropertyInfo), nullsafeQueryFunc(exp)));
+                        list.Add(Expression.Assign(Expression.MakeMemberAccess(p1, destPropertyInfo), nullsafeQueryFunc(exp)));
                     }
                     //表示表达式需要进行ifTrue的判断
                     if (ifTrue && test != null)
@@ -225,17 +225,17 @@ namespace AutoCopyLib
             //m_func = Expression.Lambda<RefFunc>(body2, p1, p2, p3).Compile();
             //m_func = function as RefFunc;
         }
-        public bool ShallowCopy(T src, D dst)
+        public bool ShallowCopy(TSource src, TDest dst)
         {
-            return m_func(ref src, dst, this);
+            return m_func(ref dst, src, this);
         }
-        public T Map(D dst)
+        public TDest Map(TSource source)
         {
-            T t = default(T);
-            bool r = m_func(ref t, dst, this);
+            TDest t = default(TDest);
+            bool r = m_func(ref t, source, this);
             return t;
         }
-        public TargetExpressionProviderBase Provider { get; set; } = new DefaultPropertyExpressionProvider(typeof(D));
+        public TargetExpressionProviderBase Provider { get; set; } = new DefaultPropertyExpressionProvider(typeof(TSource));
         public LambdaExpression Lambda
         {
             get;
