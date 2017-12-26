@@ -48,21 +48,27 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Attributes\CopyMapAttribute.cs" />
     <Compile Include="AutoCopy.cs" />
-    <Compile Include="CopyIgnoreAttribute.cs" />
+    <Compile Include="Attributes\CopyIgnoreAttribute.cs" />
     <Compile Include="DefaultPropertyExpressionProvider.cs" />
     <Compile Include="FastExpressionCompiler.cs" />
     <Compile Include="FindProperty.cs" />
-    <Compile Include="FunctionCompositionExtensions.cs" />
+    <Compile Include="Visitors\FunctionCompositionExtensions.cs" />
+    <Compile Include="Visitors\GetTryBodyRewriter.cs" />
     <Compile Include="LockingConcurrentDictionary.cs" />
-    <Compile Include="NullsafeQueryRewriter.cs" />
+    <Compile Include="Visitors\NullsafeQueryRewriter.cs" />
     <Compile Include="OldExpressionVisitor.cs" />
     <Compile Include="Option.cs" />
+    <Compile Include="ParameterTuple.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReflectExt.cs" />
     <Compile Include="TargetExpressionProviderBase.cs" />
     <Compile Include="TypeConverter.cs" />
     <Compile Include="TypeTuple.cs" />
+    <Compile Include="Utilities\Guard.cs" />
+    <Compile Include="Utilities\StaticReflection.cs" />
+    <Compile Include="Utilities\VariableGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="DelegateDecompiler.dll" />

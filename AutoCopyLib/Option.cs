@@ -12,7 +12,7 @@ namespace AutoCopyLib
             protected override Expression VisitParameter(ParameterExpression p)//替换掉对象
             {
                 if (p.Type == typeof(P))
-                    return _p;
+                    return _parameterTuple.Source;
                 return base.VisitParameter(p);
             }
             protected override Expression VisitMethodCall(MethodCallExpression node)
@@ -36,25 +36,28 @@ namespace AutoCopyLib
                     var newparameter1 = Expression.Variable(parameter1.Type, "p1");
                     var parameter2 = lambdaExpression.Parameters[1];
                     var newparameter2 = Expression.Parameter(parameter2.Type, "p2");
-                    //去掉lambda表达式最外层的try catch
-                    var body=(BlockExpression)((TryExpression)lambdaExpression.Body).Body;
-                    //遍历表达式的body，替换原来的两个参数为新定义的参数
+                    var parameter3 = lambdaExpression.Parameters[2];
+                    var newparameter3 = Expression.Parameter(parameter3.Type.MakeByRefType(), "p3");
+                    //获取try中的body
+                    var body=(BlockExpression)new GetTryBodyRewriter(lambdaExpression).Body;
+                    //遍历表达式的body，替换原来的三个参数为新定义的参数
                     body = ParameterReplacer.Replace(body, parameter1, newparameter1) as BlockExpression;
                     body = ParameterReplacer.Replace(body, parameter2, newparameter2) as BlockExpression;
+                    body = ParameterReplacer.Replace(body, parameter3, newparameter3) as BlockExpression;
                     //初始化临时变量并构造新的lambda表达式
-                    //去掉原来lambda表达式第一行的Expression.Coalesce运算和最后的return true
+                    //去掉原来lambda表达式最后的return true
                     var initExpression = Expression.Assign(newparameter1, Expression.New(newparameter1.Type));
                     var returnExpression = newparameter1;
-                    var newBlockExpression = Expression.Block(new[] { newparameter1 }.Concat(body.Variables),new[] { initExpression }.Concat(body.Expressions.Skip(1).Take(body.Expressions.Count-2)).Concat(new[] { returnExpression }));
-                    var newLambda = Expression.Lambda(newBlockExpression, newparameter2);
-                    return Expression.Invoke(newLambda, argument);
+                    var newBlockExpression = Expression.Block(new[] { newparameter1 }.Concat(body.Variables),new[] { initExpression }.Concat(body.Expressions.Take(body.Expressions.Count-1)).Concat(new[] { returnExpression }));
+                    var newLambda = Expression.Lambda(newBlockExpression, newparameter2, newparameter3);
+                    return Expression.Invoke(newLambda, argument, _parameterTuple.ErrorMsg);
                 }
                 return base.VisitMethodCall(node);
             }
-            private ParameterExpression _p;
-            public Option(ParameterExpression p)
+            private ParameterTuple _parameterTuple;
+            public Option(ParameterTuple parameterTuple)
             {
-                _p = p;
+                _parameterTuple = parameterTuple;
             }
             public Expression MapFrom<TValue>(
                 Expression<Func<P, TValue>> selector)
