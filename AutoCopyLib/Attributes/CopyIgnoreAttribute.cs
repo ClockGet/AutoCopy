@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace AutoCopyLib
+namespace AutoCopyLib.Attributes
 {
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
     public class CopyIgnoreAttribute : Attribute
