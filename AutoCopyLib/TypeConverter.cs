@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AutoCopyLib.Utilities;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -93,7 +94,7 @@ namespace AutoCopyLib
                     {
                         temp = Expression.Call(parameter, toStringMethod);
                     }
-                    ParameterExpression p = Expression.Variable(destType);
+                    ParameterExpression p = VariableGenerator.Generate(destType);
                     expression = Expression.Call(null, method, temp, p);
                     act = (list, p1, srcPropertyInfo, func) =>
                     {
