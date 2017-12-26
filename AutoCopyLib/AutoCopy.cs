@@ -1,4 +1,5 @@
-﻿using DelegateDecompiler;
+﻿using AutoCopyLib.Attributes;
+using DelegateDecompiler;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,20 +18,20 @@ namespace AutoCopyLib
     }
     public partial class AutoCopy<TSource, TDest>
     {
-        delegate bool RefFunc(ref TDest dest, TSource src, AutoCopy<TSource, TDest> proxy);
-        private Exception exception = null;
+        private static ConstantExpression ReturnTrue = Expression.Constant(true, typeof(bool));
+        private static ConstantExpression ReturnFalse = Expression.Constant(false, typeof(bool));
+        delegate bool RefFunc(ref TDest dest, TSource src, out string errMsg);
         internal AutoCopy()
         {
-            p1 = Expression.Parameter(typeof(TDest).MakeByRefType(), "dest");
-            p2 = Expression.Parameter(typeof(TSource), "src");
-            p3 = Expression.Parameter(this.GetType(), "proxy");
-            opt = new Option<TSource>(p2);
+            var p1 = Expression.Parameter(typeof(TDest).MakeByRefType(), "dest");
+            var p2 = Expression.Parameter(typeof(TSource), "src");
+            var p3 = Expression.Parameter(typeof(string).MakeByRefType(), "errMsg");
+            parameterTuple = new ParameterTuple(p1, p2, p3);
+            opt = new Option<TSource>(parameterTuple);
         }
         private RefFunc m_func;
         private Option<TSource> opt = null;
-        ParameterExpression p1 = null;
-        ParameterExpression p2 = null;
-        ParameterExpression p3 = null;
+        private ParameterTuple parameterTuple = null;
         private Dictionary<PropertyInfo, Expression> _map = new Dictionary<PropertyInfo, Expression>();
         private NullsafeQueryRewriter nullsafeQueryRewriter = new NullsafeQueryRewriter();
         private Func<Expression, Expression> nullsafeQueryFunc = null;
@@ -61,11 +62,11 @@ namespace AutoCopyLib
             try
             {
                 var exp = func.Decompile();
-                expression = ParameterReplacer.Replace(exp.Body, p2, p2);
+                expression = ParameterReplacer.Replace(exp.Body, parameterTuple.Source, parameterTuple.Source);
             }
             catch
             {
-                expression = Expression.Call(Expression.Constant(func.Target), func.Method, p2);
+                expression = Expression.Call(Expression.Constant(func.Target), func.Method, parameterTuple.Source);
             }
 
             _map[p] = expression;
@@ -102,12 +103,14 @@ namespace AutoCopyLib
             if (this.Lambda == null)
             {
                 nullsafeQueryFunc = (exp) => enableNullSafe ? nullsafeQueryRewriter.visit(exp) : exp;
-                var destPropertyInfos = typeof(TDest).GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(p => p.GetCustomAttributes(typeof(CopyIgnoreAttribute), true).Length == 0);
+                var destPropertyInfos = typeof(TDest).GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(p => p.GetCustomAttribute<CopyIgnoreAttribute>(true) == null);
                 //var dstPropertyInfos = typeof(D).GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
                 List<Expression> list = new List<Expression>();
+                List<Expression> initExprs = new List<Expression>();
                 List<ParameterExpression> variables = new List<ParameterExpression>();
-                list.Add(Expression.Assign(p1, Expression.Coalesce(p1, Expression.New(typeof(TDest)))));
+                initExprs.Add(Expression.Assign(parameterTuple.ErrorMsg, Expression.Constant(string.Empty)));
+                initExprs.Add(Expression.Assign(parameterTuple.Destination, Expression.Coalesce(parameterTuple.Destination, Expression.New(typeof(TDest)))));
                 foreach (var destPropertyInfo in destPropertyInfos)
                 {
                     if (!destPropertyInfo.CanWrite)
@@ -117,9 +120,10 @@ namespace AutoCopyLib
                     Expression exp, test = null;
                     ParameterExpression @var;
                     bool ifTrue = false;
+                    string sourceName = destPropertyInfo.GetCustomAttribute<CopyMapAttribute>()?.MapName ?? destPropertyInfo.Name;
                     if (!_map.TryGetValue(destPropertyInfo, out exp))
                     {
-                        if (!Provider.TryGetExpression(destPropertyInfo.Name, p2, destPropertyInfo.PropertyType, out exp, out @var, out test, out ifTrue))
+                        if (!Provider.TryGetExpression(destPropertyInfo.Name, parameterTuple.Source, destPropertyInfo.PropertyType, out exp, out @var, out test, out ifTrue))
                         {
                             continue;
                         }
@@ -135,7 +139,7 @@ namespace AutoCopyLib
                         if (_typeConvertMap.TryGetValue(typeTuple, out m))
                         {
                             exp = Expression.Call(exp, m);
-                            list.Add(Expression.Assign(Expression.MakeMemberAccess(p1, destPropertyInfo), nullsafeQueryFunc(exp)));
+                            list.Add(Expression.Assign(Expression.MakeMemberAccess(parameterTuple.Destination, destPropertyInfo), nullsafeQueryFunc(exp)));
                         }
                         else
                         {
@@ -148,7 +152,7 @@ namespace AutoCopyLib
                             }
                             if (act == null)
                                 continue;
-                            act(list, p1, destPropertyInfo, nullsafeQueryFunc);
+                            act(list, parameterTuple.Destination, destPropertyInfo, nullsafeQueryFunc);
                             if (variable != null)
                             {
                                 variables.Add(variable);
@@ -157,7 +161,7 @@ namespace AutoCopyLib
                     }
                     else
                     {
-                        list.Add(Expression.Assign(Expression.MakeMemberAccess(p1, destPropertyInfo), nullsafeQueryFunc(exp)));
+                        list.Add(Expression.Assign(Expression.MakeMemberAccess(parameterTuple.Destination, destPropertyInfo), nullsafeQueryFunc(exp)));
                     }
                     //表示表达式需要进行ifTrue的判断
                     if (ifTrue && test != null)
@@ -168,7 +172,7 @@ namespace AutoCopyLib
                         list[list.Count - 1] = tempExp;
                     }
                 }
-                list.Add(Expression.Constant(true, typeof(bool)));
+                list.Add(ReturnTrue);
                 BlockExpression body = null;
                 if (variables.Count == 0)
                     body = Expression.Block(list);
@@ -177,12 +181,12 @@ namespace AutoCopyLib
                 this.Body = body;
                 var parExcep = Expression.Parameter(typeof(Exception), "ex");
                 var catchBlock = Expression.Block(
-                    Expression.Call(p3, this.GetType().GetMethod(nameof(this.SetException), BindingFlags.Instance | BindingFlags.Public), parExcep),
-                    Expression.Constant(false, typeof(bool))
+                    Expression.Assign(parameterTuple.ErrorMsg, Expression.MakeMemberAccess(parExcep, Utilities.StaticReflection.GetMemberInfo((Exception ex) => ex.Message))),
+                    ReturnFalse
                     );
                 var body2 = Expression.TryCatch(body, Expression.Catch(parExcep, catchBlock));
 
-                var lambdaExpression = Expression.Lambda<RefFunc>(body2, p1, p2, p3);
+                var lambdaExpression = Expression.Lambda<RefFunc>(Expression.Block(initExprs.Concat(new Expression[] { body2 })), parameterTuple.Collect());
 
                 this.Lambda = lambdaExpression;
             }
@@ -225,15 +229,25 @@ namespace AutoCopyLib
             //m_func = Expression.Lambda<RefFunc>(body2, p1, p2, p3).Compile();
             //m_func = function as RefFunc;
         }
-        public bool ShallowCopy(TSource src, TDest dst)
+        public bool ShallowCopy(TSource src, TDest dst, out string errMsg)
         {
-            return m_func(ref dst, src, this);
+            return m_func(ref dst, src, out errMsg);
         }
         public TDest Map(TSource source)
         {
             TDest t = default(TDest);
-            bool r = m_func(ref t, source, this);
+            string errMsg;
+            if (!m_func(ref t, source, out errMsg))
+            {
+                throw new Exception(errMsg);
+            }
             return t;
+        }
+        public bool TryMap(TSource source, out TDest dest, out string errMsg)
+        {
+            errMsg = string.Empty;
+            dest = default(TDest);
+            return m_func(ref dest, source, out errMsg);
         }
         public TargetExpressionProviderBase Provider { get; set; } = new DefaultPropertyExpressionProvider(typeof(TSource));
         public LambdaExpression Lambda
@@ -245,14 +259,6 @@ namespace AutoCopyLib
         {
             get;
             private set;
-        }
-        public void SetException(Exception ex)
-        {
-            exception = ex;
-        }
-        public Exception GetLastError()
-        {
-            return exception;
         }
         public bool IsFastMode
         {
