@@ -49,11 +49,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes\CopyMapAttribute.cs" />
+    <Compile Include="Attributes\CopyRequiredAttribute.cs" />
     <Compile Include="AutoCopy.cs" />
     <Compile Include="Attributes\CopyIgnoreAttribute.cs" />
     <Compile Include="DefaultPropertyExpressionProvider.cs" />
     <Compile Include="FastExpressionCompiler.cs" />
     <Compile Include="FindProperty.cs" />
+    <Compile Include="Visitors\ConditionFalseRewriter.cs" />
     <Compile Include="Visitors\FunctionCompositionExtensions.cs" />
     <Compile Include="Visitors\GetTryBodyRewriter.cs" />
     <Compile Include="LockingConcurrentDictionary.cs" />
@@ -69,6 +71,7 @@
     <Compile Include="Utilities\Guard.cs" />
     <Compile Include="Utilities\StaticReflection.cs" />
     <Compile Include="Utilities\VariableGenerator.cs" />
+    <Compile Include="Visitors\ReturnTargetRewriter.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="DelegateDecompiler.dll" />

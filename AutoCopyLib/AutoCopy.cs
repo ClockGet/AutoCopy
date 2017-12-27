@@ -1,4 +1,5 @@
 ﻿using AutoCopyLib.Attributes;
+using AutoCopyLib.Visitors;
 using DelegateDecompiler;
 using System;
 using System.Collections.Generic;
@@ -62,7 +63,7 @@ namespace AutoCopyLib
             try
             {
                 var exp = func.Decompile();
-                expression = ParameterReplacer.Replace(exp.Body,new ParameterExpression[] { parameterTuple.Source },new ParameterExpression[] { parameterTuple.Source });
+                expression = ParameterReplacer.Replace(exp.Body, new ParameterExpression[] { parameterTuple.Source }, new ParameterExpression[] { parameterTuple.Source });
             }
             catch
             {
@@ -103,7 +104,10 @@ namespace AutoCopyLib
             if (this.Lambda == null)
             {
                 nullsafeQueryFunc = (exp) => enableNullSafe ? nullsafeQueryRewriter.visit(exp) : exp;
-                var destPropertyInfos = typeof(TDest).GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(p => p.GetCustomAttribute<CopyIgnoreAttribute>(true) == null);
+                var propertyInfos = typeof(TDest).GetProperties(BindingFlags.Instance | BindingFlags.Public);
+                var destPropertyInfos = propertyInfos.Where(p => p.GetCustomAttribute<CopyIgnoreAttribute>(true) == null);
+                hasReturnLabel = propertyInfos.Where(p => p.GetCustomAttribute<CopyRequiredAttribute>(true) != null).FirstOrDefault() != null;
+                LabelTarget returnTarget = Expression.Label(typeof(bool));
                 //var dstPropertyInfos = typeof(D).GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
                 List<Expression> list = new List<Expression>();
@@ -123,7 +127,7 @@ namespace AutoCopyLib
                     string sourceName = destPropertyInfo.GetCustomAttribute<CopyMapAttribute>()?.MapName ?? destPropertyInfo.Name;
                     if (!_map.TryGetValue(destPropertyInfo, out exp))
                     {
-                        if (!Provider.TryGetExpression(destPropertyInfo.Name, parameterTuple.Source, destPropertyInfo.PropertyType, out exp, out @var, out test, out ifTrue))
+                        if (!Provider.TryGetExpression(sourceName, parameterTuple.Source, destPropertyInfo.PropertyType, out exp, out @var, out test, out ifTrue))
                         {
                             continue;
                         }
@@ -171,8 +175,23 @@ namespace AutoCopyLib
                         tempExp = Expression.IfThen(test, tempExp);
                         list[list.Count - 1] = tempExp;
                     }
+                    //check if the property has the CopyRequiredAttribute
+                    var copyRequired = destPropertyInfo.GetCustomAttribute<CopyRequiredAttribute>();
+                    if (copyRequired != null)
+                    {
+                        var tempExp = list[list.Count - 1];
+                        Expression falseBody = Expression.Block(
+                            Expression.Assign(parameterTuple.ErrorMsg, Expression.Constant(string.Format(copyRequired.MsgFormat, sourceName))),
+                            Expression.Return(returnTarget,ReturnFalse)
+                        );
+                        tempExp = new ConditionFalseRewriter(falseBody).Visit(tempExp);
+                        list[list.Count - 1] = tempExp;
+                    }
                 }
-                list.Add(ReturnTrue);
+                if (!hasReturnLabel)
+                    list.Add(ReturnTrue);
+                else
+                    list.Add(Expression.Return(returnTarget, ReturnTrue));
                 BlockExpression body = null;
                 if (variables.Count == 0)
                     body = Expression.Block(list);
@@ -182,11 +201,11 @@ namespace AutoCopyLib
                 var parExcep = Expression.Parameter(typeof(Exception), "ex");
                 var catchBlock = Expression.Block(
                     Expression.Assign(parameterTuple.ErrorMsg, Expression.MakeMemberAccess(parExcep, Utilities.StaticReflection.GetMemberInfo((Exception ex) => ex.Message))),
-                    ReturnFalse
+                    !hasReturnLabel ? (Expression)ReturnFalse : (Expression)Expression.Return(returnTarget, ReturnFalse)
                     );
                 var body2 = Expression.TryCatch(body, Expression.Catch(parExcep, catchBlock));
 
-                var lambdaExpression = Expression.Lambda<RefFunc>(Expression.Block(initExprs.Concat(new Expression[] { body2 })), parameterTuple.Collect());
+                var lambdaExpression = Expression.Lambda<RefFunc>(Expression.Block(initExprs.Concat(!hasReturnLabel ? new Expression[] { body2 } : new Expression[] { body2, Expression.Label(returnTarget, ReturnFalse) })), parameterTuple.Collect());
 
                 this.Lambda = lambdaExpression;
             }
@@ -262,6 +281,11 @@ namespace AutoCopyLib
             private set;
         }
         public bool IsFastMode
+        {
+            get;
+            private set;
+        }
+        internal bool hasReturnLabel
         {
             get;
             private set;
