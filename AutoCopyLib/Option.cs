@@ -41,9 +41,7 @@ namespace AutoCopyLib
                     //获取try中的body
                     var body=(BlockExpression)new GetTryBodyRewriter(lambdaExpression).Body;
                     //遍历表达式的body，替换原来的三个参数为新定义的参数
-                    body = ParameterReplacer.Replace(body, parameter1, newparameter1) as BlockExpression;
-                    body = ParameterReplacer.Replace(body, parameter2, newparameter2) as BlockExpression;
-                    body = ParameterReplacer.Replace(body, parameter3, newparameter3) as BlockExpression;
+                    body = ParameterReplacer.Replace(body, new ParameterExpression[] { parameter1, parameter2, parameter3 }, new ParameterExpression[] { newparameter1, newparameter2, newparameter3 }) as BlockExpression;
                     //初始化临时变量并构造新的lambda表达式
                     //去掉原来lambda表达式最后的return true
                     var initExpression = Expression.Assign(newparameter1, Expression.New(newparameter1.Type));

@@ -62,7 +62,7 @@ namespace AutoCopyLib
             try
             {
                 var exp = func.Decompile();
-                expression = ParameterReplacer.Replace(exp.Body, parameterTuple.Source, parameterTuple.Source);
+                expression = ParameterReplacer.Replace(exp.Body,new ParameterExpression[] { parameterTuple.Source },new ParameterExpression[] { parameterTuple.Source });
             }
             catch
             {

@@ -44,25 +44,36 @@ namespace AutoCopyLib
     }
     internal class ParameterReplacer : ExpressionVisitor
     {
-        private ParameterExpression _parameter;
-        private Expression _replacement;
+        private ParameterExpression[] _parameters;
+        private Expression[] _replacements;
+        private int _length;
 
-        private ParameterReplacer(ParameterExpression parameter, Expression replacement)
+        private ParameterReplacer(ParameterExpression[] parameters, Expression[] replacements)
         {
-            _parameter = parameter;
-            _replacement = replacement;
+            _parameters = parameters;
+            _replacements = replacements;
+            _length = _parameters.Length;
         }
 
-        public static Expression Replace(Expression expression, ParameterExpression parameter, Expression replacement)
+        public static Expression Replace(Expression expression, ParameterExpression[] parameters, Expression[] replacements)
         {
-            return new ParameterReplacer(parameter, replacement).Visit(expression);
+            if (parameters == null || parameters.Length == 0)
+                throw new ArgumentException($"the parameter {nameof(parameters)} cannot be null or empty");
+            if (replacements == null || replacements.Length == 0)
+                throw new ArgumentException($"the parameter {nameof(replacements)} cannot be null or empty");
+            if (parameters.Length != replacements.Length)
+                throw new ArgumentException($"the length of {nameof(parameters)} must be equal to the length of {nameof(replacements)}");
+            return new ParameterReplacer(parameters, replacements).Visit(expression);
         }
 
         protected override Expression VisitParameter(ParameterExpression parameter)
         {
-            if (parameter.Type == _parameter.Type)
+            for (int i = 0; i < _length;i++)
             {
-                return _replacement;
+                if (parameter.Type == _parameters[i].Type)
+                {
+                    return _replacements[i];
+                }
             }
             return base.VisitParameter(parameter);
         }
