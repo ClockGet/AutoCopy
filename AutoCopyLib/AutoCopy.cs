@@ -229,8 +229,9 @@ namespace AutoCopyLib
             //m_func = Expression.Lambda<RefFunc>(body2, p1, p2, p3).Compile();
             //m_func = function as RefFunc;
         }
-        public bool ShallowCopy(TSource src, TDest dst, out string errMsg)
+        public bool ShallowCopy(TSource src, TDest dst)
         {
+            string errMsg;
             return m_func(ref dst, src, out errMsg);
         }
         public TDest Map(TSource source)

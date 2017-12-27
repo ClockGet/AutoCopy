@@ -54,7 +54,7 @@ namespace Benchmark
                 customer.Memo = "customer";
                 ShallowCopy(customerInfo, customer);
             }, loop);
-            string errmsg;
+            
             Clock.BenchmarkTime("AutoCopy",() =>
             {
                 Customer customer = new Customer();
@@ -62,7 +62,7 @@ namespace Benchmark
                 customer.Address = new Address { ZipCode = "1234567890" };
                 customer.Phone = new Telephone { Number = "17791704580" };
                 customer.Memo = "customer";
-                autoCopy.ShallowCopy(customer, customerInfo,out errmsg);
+                autoCopy.ShallowCopy(customer, customerInfo);
             }, loop);
 
             Clock.BenchmarkTime("AutoMapper",() =>
