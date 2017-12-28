@@ -202,8 +202,9 @@ With AutoCopy<T1, T2>, assume T1 is the source type and T2 is the destination ty
 ## ChangeLog
 2017-12-05 Add a demo which show the DataRow class convert to entity class  
 2017-12-12 Adjust the order of parameters in AutoCopy<,> and fixed the parameter type bug in Option.ResolveUsing  
-2017-12-27 Add the CopyMapAttribute attribute to support alias mapping of destination type property  
-2017-12-28 Add the CopyRequiredAttribute attribute to support the detection of the destination type property map value is required to be empty**[Need further testing]**  
+2017-12-26 Add the CopyMapAttribute attribute to support alias mapping of destination type property  
+2017-12-27 Add the CopyRequiredAttribute attribute to support the detection of the destination type property map value is required to be empty**[Need further testing]**  
+2017-12-28 Get a new LambdaExpression from the Decompiler function when another AutoCopy instance is called in the Option.MapFrom function  
 ## Warning
 
 Since AutoCopy uses reflection at runtime to analysis the properties of classes by calling **Register** methods automatically, bugs may occur if the source code is obfuscated.
