@@ -30,42 +30,9 @@ namespace AutoCopyLib
                     var calledClass = calledClassField.GetValue(anonymousClassInstance);
                     //调用实例的RegisterCore方法，获取Lambda表达式
                     var autoCopyType = calledClass.GetType();
-                    object lambda= autoCopyType.InvokeMember("RegisterCore", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.InvokeMethod, null, calledClass, new object[] { false });
+                    object lambda= autoCopyType.InvokeMember("Decompiler", BindingFlags.Instance | BindingFlags.Public | BindingFlags.InvokeMethod, null, calledClass, new object[] { false });
                     LambdaExpression lambdaExpression = (LambdaExpression)lambda;
-                    //获取表达式的形参并根据类型定义新的形参
-                    var parameter1 = lambdaExpression.Parameters[0];
-                    var newparameter1 = Expression.Variable(parameter1.Type, "p1");
-                    var parameter2 = lambdaExpression.Parameters[1];
-                    var newparameter2 = Expression.Parameter(parameter2.Type, "p2");
-                    var parameter3 = lambdaExpression.Parameters[2];
-                    var newparameter3 = Expression.Parameter(parameter3.Type.MakeByRefType(), "p3");
-                    //获取try中的body
-                    var body = (BlockExpression)autoCopyType.InvokeMember("Body", BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty, null, calledClass, null);
-                    //get hasReturnLabel property
-                    bool hasReturnLabel = (bool)autoCopyType.InvokeMember("hasReturnLabel", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty, null, calledClass, null);
-                    //遍历表达式的body，替换原来的三个参数为新定义的参数
-                    body = ParameterReplacer.Replace(body, new ParameterExpression[] { parameter1, parameter2, parameter3 }, new ParameterExpression[] { newparameter1, newparameter2, newparameter3 }) as BlockExpression;
-                    ReturnTargetRewriter returnTargetRewriter = null;
-                    if (hasReturnLabel)
-                    {
-                        returnTargetRewriter = new ReturnTargetRewriter(parameter1.Type, Expression.Default(parameter1.Type));
-                        body = returnTargetRewriter.Visit(body) as BlockExpression;
-                    }
-                    //初始化临时变量并构造新的lambda表达式
-                    //去掉原来lambda表达式最后的return true
-                    var initExpression = Expression.Assign(newparameter1, Expression.New(newparameter1.Type));
-                    Expression returnExpression = null;
-                    int exprCount = body.Expressions.Count - 1;
-                    if (hasReturnLabel)
-                    {
-                        returnExpression = Expression.Label(returnTargetRewriter.LabelTarget, returnTargetRewriter.DefaultValue);
-                        ++exprCount;
-                    }
-                    else
-                        returnExpression = newparameter1;
-                    var newBlockExpression = Expression.Block(new[] { newparameter1 }.Concat(body.Variables), new[] { initExpression }.Concat(body.Expressions.Take(exprCount)).Concat(new[] { returnExpression }));
-                    var newLambda = Expression.Lambda(newBlockExpression, newparameter2, newparameter3);
-                    return Expression.Invoke(newLambda, argument, _parameterTuple.ErrorMsg);
+                    return Expression.Invoke(lambdaExpression, argument, _parameterTuple.ErrorMsg);
                 }
                 return base.VisitMethodCall(node);
             }

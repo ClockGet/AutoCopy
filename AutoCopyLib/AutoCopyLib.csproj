@@ -55,6 +55,7 @@
     <Compile Include="DefaultPropertyExpressionProvider.cs" />
     <Compile Include="FastExpressionCompiler.cs" />
     <Compile Include="FindProperty.cs" />
+    <Compile Include="Reorganization.cs" />
     <Compile Include="Visitors\ConditionFalseRewriter.cs" />
     <Compile Include="Visitors\FunctionCompositionExtensions.cs" />
     <Compile Include="Visitors\GetTryBodyRewriter.cs" />
