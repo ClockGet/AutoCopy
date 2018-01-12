@@ -205,6 +205,7 @@ With AutoCopy<T1, T2>, assume T1 is the source type and T2 is the destination ty
 2017-12-26 Add the CopyMapAttribute attribute to support alias mapping of destination type property  
 2017-12-27 Add the CopyRequiredAttribute attribute to support the detection of the destination type property map value is required to be empty**[Need further testing]**  
 2017-12-28 Get a new LambdaExpression from the Decompiler function when another AutoCopy instance is called in the Option.MapFrom function  
+2018-01-12 Overload the Option.MapForm function, add a string parameter indicating the target's property name or mapping name  
 ## Warning
 
 Since AutoCopy uses reflection at runtime to analysis the properties of classes by calling **Register** methods automatically, bugs may occur if the source code is obfuscated.

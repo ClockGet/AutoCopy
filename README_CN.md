@@ -210,7 +210,8 @@ Benchmark code see [here](/Console.Test/Program.cs)
 2017-12-13 调整了AutoCopy<,>类的参数顺序并且修改了Option.ResolveUsing方法参数类型错误的bug  
 2017-12-26 增加CopyMapAttribute特性来支持目标类型属性的别名映射  
 2017-12-27 增加CopyRequiredAttribute特性来支持检测目标类型属性所需要映射的值是否为空**[需要进一步测试]**  
-2017-12-28 当Option.MapFrom函数中调用其他AutoCopy实例时从Decompiler函数中获取新的LambdaExpression
+2017-12-28 当Option.MapFrom函数中调用其他AutoCopy实例时从Decompiler函数中获取新的LambdaExpression  
+2018-01-12 重载Option.MapForm函数，添加一个字符串参数，指示目标的属性名称或映射名称  
 ## 注意事项
 
 由于AutoCopy在运行时通过主动调用**Register**方法使用反射分析类的属性，所以如果方法进行了混淆可能会出现Bug。
