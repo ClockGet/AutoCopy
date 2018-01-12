@@ -51,7 +51,7 @@ namespace AutoCopyLib
             //}
             //var p = (PropertyInfo)((MemberExpression)body).Member;
             var p = FindProperty(dest) as PropertyInfo;
-            var expression = src.Invoke(opt);
+            var expression = src(opt);
             _map[p] = expression;
             return this;
         }
@@ -73,7 +73,7 @@ namespace AutoCopyLib
             _map[p] = expression;
             return this;
         }
-        public AutoCopy<TSource, TDest> ForTypeConvert<T1, T2>(Expression<Func<T2, T1>> converter)
+        public AutoCopy<TSource, TDest> ForTypeConvert<T1, T2>(Expression<Func<T1, T2>> converter)
         {
             Type src = typeof(T1);
             Type dst = typeof(T2);
@@ -81,7 +81,7 @@ namespace AutoCopyLib
                 throw new Exception($"{src.Name}与{dst.Name}类型相同");
             TypeTuple tuple = new TypeTuple(src, dst);
             if (_typeConvertMap.ContainsKey(tuple))
-                throw new Exception($"已经存在{dst.Name}到{src.Name}的转换");
+                throw new Exception($"已经存在{src.Name}到{dst.Name}的转换");
             Expression body = converter;
             if (body is LambdaExpression)
             {
@@ -89,9 +89,18 @@ namespace AutoCopyLib
                 if (body == null)
                     throw new Exception("lambda表达式不能为空");
                 var method = body as MethodCallExpression;
+                MethodInfo methodInfo = null;
                 if (method == null)
+                {
+                    methodInfo = converter.Compile().Method;
+                }
+                else
+                {
+                    methodInfo = method.Method;
+                }
+                if (methodInfo == null)
                     throw new Exception("获取不到lambda表达式中调用的方法");
-                _typeConvertMap.Add(tuple, method.Method);
+                _typeConvertMap.Add(tuple, methodInfo);
             }
             else
             {
@@ -138,11 +147,11 @@ namespace AutoCopyLib
                     }
                     if (destPropertyInfo.PropertyType != exp.Type)
                     {
-                        TypeTuple typeTuple = new TypeTuple(destPropertyInfo.PropertyType, exp.Type);
+                        TypeTuple typeTuple = new TypeTuple(exp.Type, destPropertyInfo.PropertyType);
                         MethodInfo m;
                         if (_typeConvertMap.TryGetValue(typeTuple, out m))
                         {
-                            exp = Expression.Call(exp, m);
+                            exp = Expression.Call(m, exp);
                             list.Add(Expression.Assign(Expression.MakeMemberAccess(parameterTuple.Destination, destPropertyInfo), nullsafeQueryFunc(exp)));
                         }
                         else
@@ -165,6 +174,7 @@ namespace AutoCopyLib
                     }
                     else
                     {
+                        exp=ParameterReplacer.Replace(exp, new[] { Expression.Parameter(typeof(string), "name") }, new Expression[] {Expression.Constant(sourceName) });
                         list.Add(Expression.Assign(Expression.MakeMemberAccess(parameterTuple.Destination, destPropertyInfo), nullsafeQueryFunc(exp)));
                     }
                     //表示表达式需要进行ifTrue的判断
@@ -182,7 +192,7 @@ namespace AutoCopyLib
                         var tempExp = list[list.Count - 1];
                         Expression falseBody = Expression.Block(
                             Expression.Assign(parameterTuple.ErrorMsg, Expression.Constant(string.Format(copyRequired.MsgFormat, sourceName))),
-                            Expression.Return(returnTarget,ReturnFalse)
+                            Expression.Return(returnTarget, ReturnFalse)
                         );
                         tempExp = new ConditionFalseRewriter(falseBody).Visit(tempExp);
                         list[list.Count - 1] = tempExp;

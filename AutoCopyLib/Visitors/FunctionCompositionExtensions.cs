@@ -70,7 +70,7 @@ namespace AutoCopyLib
         {
             for (int i = 0; i < _length;i++)
             {
-                if (parameter.Type == _parameters[i].Type)
+                if (parameter.Type == _parameters[i].Type && parameter.Name==_parameters[i].Name)
                 {
                     return _replacements[i];
                 }

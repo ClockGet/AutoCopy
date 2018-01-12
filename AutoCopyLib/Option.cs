@@ -12,14 +12,16 @@ namespace AutoCopyLib
         {
             protected override Expression VisitParameter(ParameterExpression p)//替换掉对象
             {
+                if (p.Name == "name" && p.Type == typeof(string))
+                    return p;
                 if (p.Type == typeof(P))
                     return _parameterTuple.Source;
-                return base.VisitParameter(p);
+                return p;
             }
             protected override Expression VisitMethodCall(MethodCallExpression node)
             {
                 //判断调用方法的实例是否为AutoCopy<>的派生类
-                if(node.Object!=null && IsAssignableToGenericType(node.Object.Type,typeof(AutoCopy<,>)))
+                if (node.Object != null && IsAssignableToGenericType(node.Object.Type, typeof(AutoCopy<,>)))
                 {
                     //获取调用方法的实例
                     var member = (MemberExpression)node.Object;
@@ -30,7 +32,7 @@ namespace AutoCopyLib
                     var calledClass = calledClassField.GetValue(anonymousClassInstance);
                     //调用实例的RegisterCore方法，获取Lambda表达式
                     var autoCopyType = calledClass.GetType();
-                    object lambda= autoCopyType.InvokeMember("Decompiler", BindingFlags.Instance | BindingFlags.Public | BindingFlags.InvokeMethod, null, calledClass, new object[] { false });
+                    object lambda = autoCopyType.InvokeMember("Decompiler", BindingFlags.Instance | BindingFlags.Public | BindingFlags.InvokeMethod, null, calledClass, new object[] { false });
                     LambdaExpression lambdaExpression = (LambdaExpression)lambda;
                     return Expression.Invoke(lambdaExpression, argument, _parameterTuple.ErrorMsg);
                 }
@@ -52,7 +54,17 @@ namespace AutoCopyLib
                 var body2 = Visit(body);
                 return body2;
             }
-            public Func<P,TValue> ResolveUsing<TValue>(Func<P,TValue> resolver)
+            public Expression MapFrom<TValue>(Expression<Func<P, string, TValue>> selector)
+            {
+                Expression body = selector;
+                if (body is LambdaExpression)
+                {
+                    body = ((LambdaExpression)body).Body;
+                }
+                var body2 = Visit(body);
+                return body2;
+            }
+            public Func<P, TValue> ResolveUsing<TValue>(Func<P, TValue> resolver)
             {
                 return resolver;
             }
