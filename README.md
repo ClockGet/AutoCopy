@@ -175,8 +175,8 @@ Benchmark code see [here](/Console.Test/Program.cs)
 ### Automatic conversion
 The TryConvert method of the internal class [TypeConverter](/AutoCopyLib/TypeConverter.cs) performs automatic conversion of the type in the following order：
 
-1. Whether it can be converted explicitly
-2. Whether it can be converted implicitly
+1. Whether there is a explicit operator
+2. Whether there is a implicit operator
 3. Whether it is a subclass
 4. Whether there is the Convert.ToXXX method
 5. Whether there is the TryParse method on the target type
@@ -203,7 +203,7 @@ With AutoCopy<T1, T2>, assume T1 is the source type and T2 is the destination ty
 2017-12-05 Add a demo which show the DataRow class convert to entity class  
 2017-12-12 Adjust the order of parameters in AutoCopy<,> and fixed the parameter type bug in Option.ResolveUsing  
 2017-12-26 Add the CopyMapAttribute attribute to support alias mapping of destination type property  
-2017-12-27 Add the CopyRequiredAttribute attribute to support the detection of the destination type property map value is required to be empty**[Need further testing]**  
+2017-12-27 Add the CopyRequiredAttribute attribute to support the detection of the destination type property map value is required to be empty **[Need further testing]**  
 2017-12-28 Get a new LambdaExpression from the Decompiler function when another AutoCopy instance is called in the Option.MapFrom function  
 2018-01-12 Overload the Option.MapForm function, add a string parameter indicating the target's property name or mapping name  
 ## Warning

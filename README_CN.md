@@ -181,8 +181,8 @@ Benchmark code see [here](/Console.Test/Program.cs)
 ### 自动转换
 内部类[TypeConverter](/AutoCopyLib/TypeConverter.cs)的TryConvert方法通过以下顺序进行类型的自动转换：
 
-1. 是否可以显式转换
-2. 是否可以隐式转换
+1. 是否存在显式转换操作符
+2. 是否存在隐式转换操作符
 3. 是否存在继承关系
 4. 是否存在Convert.ToXXX方法
 5. 是否可以调用目标类型上的TryParse方法
@@ -209,7 +209,7 @@ Benchmark code see [here](/Console.Test/Program.cs)
 2017-12-05 增加DataRow映射到实体类的示例程序  
 2017-12-13 调整了AutoCopy<,>类的参数顺序并且修改了Option.ResolveUsing方法参数类型错误的bug  
 2017-12-26 增加CopyMapAttribute特性来支持目标类型属性的别名映射  
-2017-12-27 增加CopyRequiredAttribute特性来支持检测目标类型属性所需要映射的值是否为空**[需要进一步测试]**  
+2017-12-27 增加CopyRequiredAttribute特性来支持检测目标类型属性所需要映射的值是否为空 **[需要进一步测试]**  
 2017-12-28 当Option.MapFrom函数中调用其他AutoCopy实例时从Decompiler函数中获取新的LambdaExpression  
 2018-01-12 重载Option.MapForm函数，添加一个字符串参数，指示目标的属性名称或映射名称  
 ## 注意事项
