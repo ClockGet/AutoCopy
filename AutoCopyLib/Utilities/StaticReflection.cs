@@ -24,7 +24,14 @@ namespace AutoCopyLib.Utilities
         {
             return StaticReflection.GetMethodInfo((LambdaExpression)expression);
         }
-
+        public static MethodInfo GetMethodInfo<TResult>(Expression<Func<TResult>> expression)
+        {
+            return StaticReflection.GetMethodInfo((LambdaExpression)expression);
+        }
+        public static MethodInfo GetMethodInfo<T, TResult>(Expression<Func<T, TResult>> expression)
+        {
+            return StaticReflection.GetMethodInfo((LambdaExpression)expression);
+        }
         public static MethodInfo GetMethodInfo<T>(Expression<Action<T>> expression)
         {
             return StaticReflection.GetMethodInfo((LambdaExpression)expression);

@@ -1,4 +1,5 @@
 ﻿using AutoCopyLib.Attributes;
+using AutoCopyLib.Utilities;
 using AutoCopyLib.Visitors;
 using DelegateDecompiler;
 using System;
@@ -122,7 +123,7 @@ namespace AutoCopyLib
                 List<Expression> list = new List<Expression>();
                 List<Expression> initExprs = new List<Expression>();
                 List<ParameterExpression> variables = new List<ParameterExpression>();
-                initExprs.Add(Expression.Assign(parameterTuple.ErrorMsg, Expression.Constant(string.Empty)));
+                initExprs.Add(Expression.Assign(parameterTuple.ErrorMsg, Expression.Constant(null, typeof(string))));
                 initExprs.Add(Expression.Assign(parameterTuple.Destination, Expression.Coalesce(parameterTuple.Destination, Expression.New(typeof(TDest)))));
                 foreach (var destPropertyInfo in destPropertyInfos)
                 {
@@ -174,7 +175,7 @@ namespace AutoCopyLib
                     }
                     else
                     {
-                        exp=ParameterReplacer.Replace(exp, new[] { Expression.Parameter(typeof(string), "name") }, new Expression[] {Expression.Constant(sourceName) });
+                        exp = ParameterReplacer.Replace(exp, new[] { Expression.Parameter(typeof(string), "name") }, new Expression[] { Expression.Constant(sourceName) });
                         list.Add(Expression.Assign(Expression.MakeMemberAccess(parameterTuple.Destination, destPropertyInfo), nullsafeQueryFunc(exp)));
                     }
                     //表示表达式需要进行ifTrue的判断
@@ -190,12 +191,22 @@ namespace AutoCopyLib
                     if (copyRequired != null)
                     {
                         var tempExp = list[list.Count - 1];
-                        Expression falseBody = Expression.Block(
+                        if (tempExp.NodeType == ExpressionType.Conditional)
+                        {
+                            Expression falseBody = Expression.Block(
                             Expression.Assign(parameterTuple.ErrorMsg, Expression.Constant(string.Format(copyRequired.MsgFormat, sourceName))),
                             Expression.Return(returnTarget, ReturnFalse)
                         );
-                        tempExp = new ConditionFalseRewriter(falseBody).Visit(tempExp);
-                        list[list.Count - 1] = tempExp;
+                            tempExp = new ConditionFalseRewriter(falseBody).Visit(tempExp);
+                            list[list.Count - 1] = tempExp;
+                        }
+                        else if (tempExp.NodeType == ExpressionType.Assign && ((BinaryExpression)tempExp).Right.NodeType == ExpressionType.Invoke)
+                        {
+                            //if(!string.IsNullOrEmpty(errmsg)){ $falseBody }
+                            var e = Expression.IfThen(Expression.NotEqual(parameterTuple.ErrorMsg, Expression.Constant(null, typeof(string))), Expression.Return(returnTarget, ReturnFalse));
+                            list.Add(e);
+                        }
+
                     }
                 }
                 if (!hasReturnLabel)
